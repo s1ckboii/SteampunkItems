@@ -24,7 +24,6 @@ namespace SteampunkItems
             Valuables.RegisterValuable(val2, list);
             Valuables.RegisterValuable(val3, list);
             Valuables.RegisterValuable(val4, list);
-            GameObject item1 = assetBundle.LoadAsset<GameObject>("Item Melee Pickaxe_SP");
             Item item = assetBundle.LoadAsset<Item>("Item Melee Pickaxe_SP");
             Items.RegisterItem(item);
         }
