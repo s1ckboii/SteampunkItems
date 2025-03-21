@@ -2,8 +2,6 @@
 using Photon.Pun;
 using UnityEngine.Events;
 
-namespace SteampunkItems
-{
     public class Headset : MonoBehaviour
     {
         public UnityEvent playRandomMusic;
@@ -15,4 +13,3 @@ namespace SteampunkItems
             toggle = GetComponent<ItemToggle>();
         }
     }
-}
