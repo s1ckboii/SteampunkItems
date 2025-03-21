@@ -30,16 +30,28 @@ public class Plugins : BaseUnityPlugin
             "Valuable HeadSet_SP"
         ];
         List<string> genericList = ["Valuables - Generic"];
-        foreach (var assetNames in valuabaleAssetNames)
+        foreach (var valuableName in valuabaleAssetNames)
         {
-            RegisterValuable(assetBundle, assetNames, genericList);
+            RegisterValuable(assetBundle, valuableName, genericList);
         }
-        Item meleePickaxe = assetBundle.LoadAsset<Item>("Item Melee Pickaxe_SP");
-        Items.RegisterItem(meleePickaxe);
+        List<string> itemAssetNames =
+        [
+            "Item Melee Pickaxe_SP",
+            "Item Bombolver_SP"
+        ];
+        foreach (var itemName in itemAssetNames)
+        {
+            RegisterItem(assetBundle, itemName);
+        }
     }
-    private void RegisterValuable(AssetBundle assetBundle, string assetName, List<string> list)
+    private void RegisterValuable(AssetBundle assetBundle, string valuableName, List<string> valuableAssetNames)
     {
-        GameObject valuables = assetBundle.LoadAsset<GameObject>(assetName);
-        Valuables.RegisterValuable(valuables, list);
+        GameObject valuables = assetBundle.LoadAsset<GameObject>(valuableName);
+        Valuables.RegisterValuable(valuables, valuableAssetNames);
+    }
+    private void RegisterItem(AssetBundle assetBundle, string itemName)
+    {
+        Item items = assetBundle.LoadAsset<Item>(itemName);
+        Items.RegisterItem(items);
     }
 }
