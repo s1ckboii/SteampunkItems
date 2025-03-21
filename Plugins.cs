@@ -15,17 +15,32 @@ namespace SteampunkItems
             string pluginFolderPath = Path.GetDirectoryName(Info.Location);
             string assetBundleFilePath = Path.Combine(pluginFolderPath, "steampunkitems");
             AssetBundle assetBundle = AssetBundle.LoadFromFile(assetBundleFilePath);
-            GameObject val1 = assetBundle.LoadAsset<GameObject>("Valuable MagniGlass_SP");
-            GameObject val2 = assetBundle.LoadAsset<GameObject>("Valuable Telescope_SP");
-            GameObject val3 = assetBundle.LoadAsset<GameObject>("Valuable Stopwatch_SP");
-            GameObject val4 = assetBundle.LoadAsset<GameObject>("Valuable HeadSet_SP");
-            List<string> list = ["Valuables - Generic"];
-            Valuables.RegisterValuable(val1, list);
-            Valuables.RegisterValuable(val2, list);
-            Valuables.RegisterValuable(val3, list);
-            Valuables.RegisterValuable(val4, list);
-            Item item = assetBundle.LoadAsset<Item>("Item Melee Pickaxe_SP");
-            Items.RegisterItem(item);
+
+            if (assetBundle == null)
+            {
+                Logger.LogError("Failed to load SteampunkItems assetbundle.");
+                return;
+            }
+
+            List<string> valuabaleAssetNames = 
+            [
+                "Valuable MagniGlass_SP",
+                "Valuable Telescope_SP",
+                "Valuable Stopwatch_SP",
+                "Valuable HeadSet_SP"
+            ];
+            List<string> genericList = ["Valuables - Generic"];
+            foreach (var assetNames in valuabaleAssetNames)
+            {
+                RegisterValuable(assetBundle, assetNames, genericList);
+            }
+            Item meleePickaxe = assetBundle.LoadAsset<Item>("Item Melee Pickaxe_SP");
+            Items.RegisterItem(meleePickaxe);
+        }
+        private void RegisterValuable(AssetBundle assetBundle, string assetName, List<string> list)
+        {
+            GameObject valuables = assetBundle.LoadAsset<GameObject>(assetName);
+            Valuables.RegisterValuable(valuables, list);
         }
     }
 }
