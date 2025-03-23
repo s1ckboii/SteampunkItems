@@ -16,6 +16,7 @@ public class Headset : MonoBehaviour
     private int _currentSongIndex;
     private ItemToggle _toggle;
     private bool _isPlaying;
+    private bool _isFirstGrab = true;
 
     private readonly Dictionary<AudioClip, ParticleSystem> _songParticleMap = [];
 
@@ -38,11 +39,17 @@ public class Headset : MonoBehaviour
     {
         if (_physGrabObject.grabbed)
         {
+            audioSource.volume = 1.0f;
+            if (_isFirstGrab)
+            {
+                PlayRandomSongRPC();
+                _isFirstGrab = false;
+            }
             ToggleAudio();
         }
-        else
+        else if (!_physGrabObject.grabbed && _isPlaying)
         {
-            _photonView.RPC("StopParticlesRPC", RpcTarget.All);
+            audioSource.volume = 0.4f;
         }
     }
 
@@ -56,6 +63,7 @@ public class Headset : MonoBehaviour
         {
             audioSource.Stop();
             _isPlaying = false;
+            _photonView.RPC("StopParticlesRPC", RpcTarget.All);
         }
     }
 
@@ -86,7 +94,7 @@ public class Headset : MonoBehaviour
     {
         foreach (ParticleSystem particle in _particles)
         {
-            particle.Stop();
+            particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
     }
 
