@@ -87,6 +87,7 @@ public class Headset : MonoBehaviour
             _particles[_currentSongIndex].Play();
         }
     }
+    [PunRPC]
     private void PlaySong(string songName)
     {
         AudioClip song = _songs.FirstOrDefault(s => s.name == songName);
@@ -114,7 +115,7 @@ public class Headset : MonoBehaviour
             audioSource.clip = selectedSong;
             audioSource.Play();
 
-            _photonView.RPC("PlaySong", RpcTarget.All);
+            _photonView.RPC("PlaySong", RpcTarget.All, selectedSong);
 
             _currentSongIndex = randomIndex;
 
