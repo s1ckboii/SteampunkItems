@@ -1,7 +1,7 @@
-﻿using Photon.Pun;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using Photon.Pun;
 
 public class Headset : MonoBehaviour
 {
@@ -37,36 +37,45 @@ public class Headset : MonoBehaviour
 
     private void Update()
     {
-        if (_physGrabObject.grabbed)
+        if (SemiFunc.IsMasterClientOrSingleplayer())
         {
-            audioSource.volume = 1.0f;
-            if (_isFirstGrab)
+            if (_physGrabObject.grabbed)
             {
-                PlayRandomSongRPC();
-                _isFirstGrab = false;
+                audioSource.volume = 1.0f;
+                FirstGrab();
             }
-            ToggleAudio();
-        }
-        else if (!_physGrabObject.grabbed && _isPlaying)
-        {
-            audioSource.volume = 0.4f;
+            else if (!_physGrabObject.grabbed && _isPlaying)
+            {
+                audioSource.volume = 0.4f;
+            }
         }
     }
-
+    private void FirstGrab()
+    {
+        if (_isFirstGrab)
+        {
+            _toggle.toggleState = true;
+            _isFirstGrab = false;
+        }
+        else
+        {
+            ToggleAudio();
+        }
+    }
     private void ToggleAudio()
     {
         if (_toggle.toggleState)
         {
-            PlayRandomSongRPC();
+            _photonView.RPC("PlayRandomSongRPC", RpcTarget.All);
         }
-        else
+        else if (!_toggle.toggleState)
         {
-            audioSource.Stop();
             _isPlaying = false;
-            _photonView.RPC("StopParticlesRPC", RpcTarget.All);
+            StopParticles();
+            audioSource.Stop();
         }
     }
-
+    [PunRPC]
     private void ToggleParticles()
     {
         foreach (var particle in _particles)
@@ -78,9 +87,7 @@ public class Headset : MonoBehaviour
             _particles[_currentSongIndex].Play();
         }
     }
-
-    [PunRPC]
-    private void PlayParticleRPC(string songName)
+    private void PlaySong(string songName)
     {
         AudioClip song = _songs.FirstOrDefault(s => s.name == songName);
         if (_songParticleMap.ContainsKey(song))
@@ -88,16 +95,13 @@ public class Headset : MonoBehaviour
             _songParticleMap[song].Play();
         }
     }
-
-    [PunRPC]
-    private void StopParticlesRPC()
+    private void StopParticles()
     {
         foreach (ParticleSystem particle in _particles)
         {
             particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
     }
-
     [PunRPC]
     private void PlayRandomSongRPC()
     {
@@ -110,11 +114,11 @@ public class Headset : MonoBehaviour
             audioSource.clip = selectedSong;
             audioSource.Play();
 
-            _photonView.RPC("PlayParticleRPC", RpcTarget.All, selectedSong.name);
+            _photonView.RPC("PlaySong", RpcTarget.All);
 
             _currentSongIndex = randomIndex;
 
-            ToggleParticles();
+            _photonView.RPC("ToggleParticles", RpcTarget.All);
         }
     }
 }
