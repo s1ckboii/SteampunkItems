@@ -37,7 +37,7 @@ public class Plugins : BaseUnityPlugin
         List<string> itemAssetNames =
         [
             "Item Melee Pickaxe_SP",
-            "Item Bombolver_SP"
+            //"Item Bombolver_SP"
         ];
         foreach (var itemName in itemAssetNames)
         {
