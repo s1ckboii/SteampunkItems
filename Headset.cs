@@ -115,7 +115,7 @@ public class Headset : MonoBehaviour
             audioSource.clip = selectedSong;
             audioSource.Play();
 
-            _photonView.RPC("PlaySong", RpcTarget.All, selectedSong);
+            _photonView.RPC("PlaySong", RpcTarget.All, selectedSong.name);
 
             _currentSongIndex = randomIndex;
 
