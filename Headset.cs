@@ -1,12 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 using Photon.Pun;
 
 public class Headset : MonoBehaviour
 {
     public AudioSource audioSource;
-
     public List<ParticleSystem> _particles = [];
     public List<AudioClip> _songs = [];
 
@@ -24,7 +22,6 @@ public class Headset : MonoBehaviour
         _photonView = GetComponent<PhotonView>();
         _physGrabObject = GetComponent<PhysGrabObject>();
     }
-
     private void Update()
     {
         if (_physGrabObject.grabbed)
@@ -38,6 +35,7 @@ public class Headset : MonoBehaviour
             audioSource.volume = 0.1f;
         }
     }
+
     private void FirstGrab()
     {
         if (_isFirstGrab)
@@ -50,7 +48,8 @@ public class Headset : MonoBehaviour
     {
         if (_toggle.toggleState)
         {
-            _photonView.RPC("PlayRandomSongRPC", RpcTarget.All);
+            int randomIndex = Random.Range(0, _songs.Count);
+            _photonView.RPC("PlaySongRPC", RpcTarget.All, randomIndex);
         }
         else if (!_toggle.toggleState)
         {
@@ -59,52 +58,36 @@ public class Headset : MonoBehaviour
             audioSource.Stop();
         }
     }
-    [PunRPC]
-    private void ToggleParticles()
+    private void PlayParticles(int songIndex)
     {
-        foreach (var particle in _particles)
-        {
-            particle.Stop();
-        }
-        if (_toggle.toggleState && _currentSongIndex < _particles.Count)
-        {
-            _particles[_currentSongIndex].Play();
-        }
-    }
-    [PunRPC]
-    private void PlaySong(string songName)
-    {
-        int songIndex = _songs.FindIndex(s => s.name == songName);
+        StopParticles();
 
-        if (songIndex >= 0 &&  songIndex < _particles.Count)
+        if (songIndex < _particles.Count)
         {
             _particles[songIndex].Play();
         }
     }
     private void StopParticles()
     {
-        foreach (ParticleSystem particle in _particles)
+        foreach (var particle in _particles)
         {
             particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
     }
+
     [PunRPC]
-    private void PlayRandomSongRPC()
+    private void PlaySongRPC(int songIndex)
     {
         if (!_isPlaying)
         {
             _isPlaying = true;
-            int randomIndex = Random.Range(0, _songs.Count);
-            AudioClip selectedSong = _songs[randomIndex];
 
-            audioSource.clip = selectedSong;
+            audioSource.clip = _songs[songIndex];
             audioSource.Play();
 
-            _photonView.RPC("PlaySong", RpcTarget.All, selectedSong.name);
+            _currentSongIndex = songIndex;
 
-            _currentSongIndex = randomIndex;
-
-            _photonView.RPC("ToggleParticles", RpcTarget.All);
+            PlayParticles(songIndex);
         }
     }
 }
