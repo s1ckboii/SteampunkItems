@@ -7,7 +7,7 @@ public class Headset : MonoBehaviour
 {
     public AudioSource audioSource;
 
-    public List<ParticleSystem> _particles;
+    public List<ParticleSystem> _particles = [];
     public List<AudioClip> _songs = [];
 
     private PhotonView _photonView;
@@ -18,36 +18,24 @@ public class Headset : MonoBehaviour
     private bool _isPlaying;
     private bool _isFirstGrab = true;
 
-    private readonly Dictionary<AudioClip, ParticleSystem> _songParticleMap = [];
-
     private void Awake()
     {
         _toggle = GetComponent<ItemToggle>();
         _photonView = GetComponent<PhotonView>();
         _physGrabObject = GetComponent<PhysGrabObject>();
-
-        for (int i = 0; i < _songs.Count; i++)
-        {
-            if (i < _particles.Count)
-            {
-                _songParticleMap[_songs[i]] = _particles[i];
-            }
-        }
     }
 
     private void Update()
     {
-        if (SemiFunc.IsMasterClientOrSingleplayer())
+        if (_physGrabObject.grabbed)
         {
-            if (_physGrabObject.grabbed)
-            {
-                audioSource.volume = 1.0f;
-                FirstGrab();
-            }
-            else if (!_physGrabObject.grabbed && _isPlaying)
-            {
-                audioSource.volume = 0.4f;
-            }
+            audioSource.volume = 0.3f;
+            FirstGrab();
+            ToggleAudio();
+        }
+        else if (!_physGrabObject.grabbed && _isPlaying)
+        {
+            audioSource.volume = 0.1f;
         }
     }
     private void FirstGrab()
@@ -56,10 +44,6 @@ public class Headset : MonoBehaviour
         {
             _toggle.toggleState = true;
             _isFirstGrab = false;
-        }
-        else
-        {
-            ToggleAudio();
         }
     }
     private void ToggleAudio()
@@ -90,10 +74,11 @@ public class Headset : MonoBehaviour
     [PunRPC]
     private void PlaySong(string songName)
     {
-        AudioClip song = _songs.FirstOrDefault(s => s.name == songName);
-        if (_songParticleMap.ContainsKey(song))
+        int songIndex = _songs.FindIndex(s => s.name == songName);
+
+        if (songIndex >= 0 &&  songIndex < _particles.Count)
         {
-            _songParticleMap[song].Play();
+            _particles[songIndex].Play();
         }
     }
     private void StopParticles()
