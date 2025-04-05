@@ -26,24 +26,26 @@ public class Headset : MonoBehaviour
     {
         if (_physGrabObject.grabbed)
         {
-            audioSource.volume = 0.3f;
-            FirstGrab();
+            if (_physGrabObject.grabbedLocal)
+            {
+                audioSource.volume = 0.5f;
+            }
+            if (_isFirstGrab)
+            {
+                _toggle.toggleState = true;
+                _isFirstGrab = false;
+            }
             ToggleAudio();
         }
-        else if (!_physGrabObject.grabbed && _isPlaying)
+        else
         {
-            audioSource.volume = 0.1f;
+            audioSource.volume -= Time.deltaTime * 0.25f;
+            audioSource.volume = Mathf.Max(audioSource.volume, 0.1f);
         }
+
     }
 
-    private void FirstGrab()
-    {
-        if (_isFirstGrab)
-        {
-            _toggle.toggleState = true;
-            _isFirstGrab = false;
-        }
-    }
+
     private void ToggleAudio()
     {
         if (_toggle.toggleState)
