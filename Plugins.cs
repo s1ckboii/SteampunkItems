@@ -48,7 +48,6 @@ public class Plugins : BaseUnityPlugin
     private void RegisterValuable(AssetBundle assetBundle, string valuableName, List<string> valuableAssetNames)
     {
         GameObject valuables = assetBundle.LoadAsset<GameObject>(valuableName);
-        //Valuables.RegisterValuable(valuables, valuableAssetNames);
         Valuables.RegisterValuable(valuables, valuableAssetNames);
     }
     private void RegisterItem(AssetBundle assetBundle, string itemName)
