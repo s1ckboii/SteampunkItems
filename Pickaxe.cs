@@ -23,13 +23,22 @@ public class Pickaxe : MonoBehaviour
         {
             isGrabbed = physGrabObject.grabbed;
         }
-
-        if (isGrabbed != wasGrabbedOnPreviousUpdate)
+        if (SemiFunc.IsMultiplayer())
         {
-            photonView.RPC("SetAnimationState", RpcTarget.All, isGrabbed);
+            if (isGrabbed != wasGrabbedOnPreviousUpdate)
+            {
+                photonView.RPC("SetAnimationState", RpcTarget.All, isGrabbed);
+            }
+        }
+        else
+        {
+            if (isGrabbed != wasGrabbedOnPreviousUpdate)
+            {
+                SetAnimationState(isGrabbed);
+            }
         }
 
-        wasGrabbedOnPreviousUpdate = isGrabbed;
+            wasGrabbedOnPreviousUpdate = isGrabbed;
     }
 
     [PunRPC]
