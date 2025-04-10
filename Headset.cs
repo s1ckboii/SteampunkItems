@@ -51,7 +51,14 @@ public class Headset : MonoBehaviour
         if (_toggle.toggleState)
         {
             int randomIndex = Random.Range(0, _songs.Count);
-            _photonView.RPC("PlaySongRPC", RpcTarget.All, randomIndex);
+            if (SemiFunc.IsMultiplayer())
+            {
+                _photonView.RPC("PlaySongRPC", RpcTarget.All, randomIndex);
+            }
+            else
+            {
+                PlaySongRPC(randomIndex);
+            }
         }
         else if (!_toggle.toggleState)
         {
