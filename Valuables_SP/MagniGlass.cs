@@ -1,31 +1,37 @@
 ﻿using Photon.Pun;
+using System.Collections;
 using UnityEngine;
 
+
 namespace SteampunkItems.Valuables_SP;
+
 public class MagniGlass : MonoBehaviour
 {
     private PhotonView _photonView;
     private PhysGrabObject _physGrabObject;
-    private bool _stateStart;
-
-    public States _currentState;
-    private bool _effectsApplied = false;
-    private bool _wasGrabbedLastFrame = false;
-    private int _previousOwnerActorNumber = -1;
     private Transform _forceGrabPoint;
 
+    private bool _stateStart;
+    private bool _wasGrabbedLastFrame = false;
+    private int _ownerActorNumber = -1;
+
+    private Coroutine _resetIndestructibleCoroutine;
+
+    public States _currentState;
     public enum States
     {
         Idle,
         Active
     }
+
     public void Awake()
     {
         _photonView = GetComponent<PhotonView>();
         _physGrabObject = GetComponent<PhysGrabObject>();
+
         _forceGrabPoint = transform.Find("Force Grab Point");
-        _physGrabObject.forceGrabPoint = _forceGrabPoint;
     }
+
     public void Update()
     {
         switch (_currentState)
@@ -38,97 +44,88 @@ public class MagniGlass : MonoBehaviour
                 break;
         }
     }
-    public void StateActive()
-    {
-        if (_stateStart)
-        {
-            if (SemiFunc.IsMultiplayer())
-            {
-                bool isGrabbing = _physGrabObject.grabbedLocal;
-                bool isOwner = _photonView.IsMine;
-
-                if (isGrabbing && !isOwner && HasOwnerDropped())
-                {
-                    _photonView.RequestOwnership();
-                }
-
-                if (isOwner && isGrabbing && !_effectsApplied)
-                {
-                    _photonView.RPC("ApplyEffects", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
-                }
-
-                if (isOwner && !isGrabbing && _wasGrabbedLastFrame)
-                {
-                    _photonView.RPC("ResetEffects", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
-                }
-
-                _wasGrabbedLastFrame = isGrabbing;
-            }
-            else
-            {
-                if (_physGrabObject.grabbed)
-                {
-                    ApplyEffects(0);
-                }
-                else
-                {
-                    ResetEffects(0);
-                }
-            }
-        }
-    }
-    public void StateIdle()
+    private void StateIdle()
     {
         if (_stateStart)
         {
             _stateStart = false;
         }
+
         if (_physGrabObject.grabbedLocal)
         {
             SetState(States.Active);
         }
     }
-    public bool HasOwnerDropped()
+    private void StateActive()
     {
-        if (PhotonNetwork.LocalPlayer.ActorNumber == _photonView.OwnerActorNr)
-            return !_physGrabObject.grabbedLocal;
+        if (_stateStart)
+        {
+            _stateStart = false;
+        }
+        bool isGrabbing = _physGrabObject.grabbedLocal;
+        int localActor = PhotonNetwork.LocalPlayer.ActorNumber;
 
-        return _previousOwnerActorNumber == -1;
+        if (isGrabbing)
+        {
+            if (_ownerActorNumber != localActor)
+            {
+                _ownerActorNumber = localActor;
+            }
+
+            if (_resetIndestructibleCoroutine != null)
+            {
+                StopCoroutine(_resetIndestructibleCoroutine);
+            }
+
+            _physGrabObject.OverrideIndestructible(0.5f);
+            _resetIndestructibleCoroutine = StartCoroutine(ResetIndestructibleAfterDelay(0.5f));
+        }
+
+        if (isGrabbing && _ownerActorNumber == localActor)
+        {
+            _physGrabObject.forceGrabPoint = _forceGrabPoint;
+            ForcePosition();
+            PlayerAvatar.instance.OverridePupilSize(3f, 4, 1f, 1f, 5f, 0.5f);
+            CameraZoom.Instance.OverrideZoomSet(20f, 0.1f, 0.5f, 1f, gameObject, 0);
+        }
+
+        if (!isGrabbing && _wasGrabbedLastFrame && _ownerActorNumber == localActor)
+        {
+            _ownerActorNumber = -1;
+        }
+
+        if (!isGrabbing)
+        {
+            SetState(States.Idle);
+        }
+
+        _wasGrabbedLastFrame = isGrabbing;
     }
-    [PunRPC]
-    public void SetState(States state)
+    public void SetState(States newState)
     {
-        _currentState = state;
+        _currentState = newState;
         _stateStart = true;
     }
-    [PunRPC]
-    public void ApplyEffects(int targetActor)
+    public void ForcePosition()
     {
-        if (PhotonNetwork.LocalPlayer.ActorNumber != targetActor)
+        Quaternion turnX = Quaternion.Euler(-30f, 0f, 10f);
+        Quaternion turnY = Quaternion.Euler(50f, 180f, 0f);
+        Quaternion identity = Quaternion.identity;
+
+        
+        bool flag = false;
+        if (!flag)
         {
-            return;
+            _physGrabObject.TurnXYZ(turnX, turnY, identity);
         }
-        _effectsApplied = true;
-        _previousOwnerActorNumber = _photonView.OwnerActorNr;
-
-        PlayerAvatar.instance.OverridePupilSize(3f, 4, 1f, 1f, 5f, 0.5f);
-        CameraZoom.Instance.OverrideZoomSet(40f, 0.1f, 0.5f, 1f, gameObject, 0);
-
-        Debug.Log("Applying magniglass effects to local player");
-
+        _physGrabObject.OverrideGrabVerticalPosition(-0.24f);
+        PhysGrabber.instance.OverrideGrabDistance(0.5f);
     }
-    [PunRPC]
-    public void ResetEffects(int targetActor)
+    private IEnumerator ResetIndestructibleAfterDelay(float delay)
     {
-        if (PhotonNetwork.LocalPlayer.ActorNumber != targetActor)
-        {
-            return;
-        }
-        _effectsApplied = false;
-        _previousOwnerActorNumber = -1;
-
-        StateIdle();
-
-        Debug.Log("Resetting magniglass effects on local player");
+        yield return new WaitForSeconds(delay);
+        _physGrabObject.OverrideIndestructible(0f);
+        _resetIndestructibleCoroutine = null;
     }
+
 }
