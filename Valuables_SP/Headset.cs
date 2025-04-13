@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Photon.Pun;
 
+namespace SteampunkItems.Valuables_SP;
 public class Headset : MonoBehaviour
 {
     public AudioSource audioSource;

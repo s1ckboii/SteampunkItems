@@ -4,30 +4,30 @@ using Photon.Pun;
 public class Pickaxe : MonoBehaviour
 {
     public Animator animator;
-    private PhysGrabObject physGrabObject;
 
-    private PhotonView photonView;
+    private PhysGrabObject _physGrabObject;
+    private PhotonView _photonView;
 
     private bool isGrabbed = false;
     private bool wasGrabbedOnPreviousUpdate;
 
     private void Awake()
     {
-        physGrabObject = GetComponent<PhysGrabObject>();
-        photonView = GetComponent<PhotonView>();
+        _physGrabObject = GetComponent<PhysGrabObject>();
+        _photonView = GetComponent<PhotonView>();
     }
 
     private void Update()
     {
-        if (physGrabObject != null)
+        if (_physGrabObject != null)
         {
-            isGrabbed = physGrabObject.grabbed;
+            isGrabbed = _physGrabObject.grabbed;
         }
         if (SemiFunc.IsMultiplayer())
         {
             if (isGrabbed != wasGrabbedOnPreviousUpdate)
             {
-                photonView.RPC("SetAnimationState", RpcTarget.All, isGrabbed);
+                _photonView.RPC("SetAnimationState", RpcTarget.All, isGrabbed);
             }
         }
         else
