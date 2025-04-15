@@ -84,8 +84,15 @@ public class MagniGlass : MonoBehaviour
         if (isGrabbing && _ownerActorNumber == localActor)
         {
             _physGrabObject.forceGrabPoint = _forceGrabPoint;
-            ForcePosition();
-            PlayerAvatar.instance.OverridePupilSize(3f, 4, 1f, 1f, 5f, 0.5f);
+            if (SemiFunc.IsMultiplayer())
+            {
+                _photonView.RPC("ForcePosition", RpcTarget.All);
+            }
+            else
+            {
+                ForcePosition();
+            }
+                PlayerAvatar.instance.OverridePupilSize(3f, 4, 1f, 1f, 5f, 0.5f);
             CameraZoom.Instance.OverrideZoomSet(20f, 0.1f, 0.5f, 1f, gameObject, 0);
         }
 
@@ -106,6 +113,7 @@ public class MagniGlass : MonoBehaviour
         _currentState = newState;
         _stateStart = true;
     }
+    [PunRPC]
     public void ForcePosition()
     {
         Quaternion turnX = Quaternion.Euler(-30f, 0f, 10f);
