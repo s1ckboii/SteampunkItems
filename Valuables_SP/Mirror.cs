@@ -17,12 +17,14 @@ namespace SteampunkItems.Valuables_SP
 
         public void Start()
         {
-            _mirrorTexture = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
-            _mirrorTexture.useMipMap = false;
-            _mirrorTexture.antiAliasing = 2;
-            _mirrorTexture.wrapMode = TextureWrapMode.Clamp;
-            _mirrorTexture.filterMode = FilterMode.Bilinear;
-            _mirrorTexture.name = "MirrorRT_" + gameObject.name;
+            _mirrorTexture = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32)
+            {
+                useMipMap = false,
+                antiAliasing = 2,
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear,
+                name = "MirrorRT_" + gameObject.name
+            };
             _mirrorTexture.Create();
 
             _playerCam = GameDirector.instance.MainCamera;
@@ -30,10 +32,10 @@ namespace SteampunkItems.Valuables_SP
             _mirrorMaterial.SetTexture("_ReflectionTex", _mirrorTexture);
             _mirrorMaterial.SetFloat("_ReflectIntensity", 1);
 
-            _mirrorCam.targetTexture = _mirrorTexture;
-
             _mirrorCam.nearClipPlane = 0.05f;
             _mirrorCam.farClipPlane = 100f;
+
+            _mirrorCam.targetTexture = _mirrorTexture;
 
             _rendererTransform = _mirrorRenderer.transform;
         }
@@ -48,13 +50,13 @@ namespace SteampunkItems.Valuables_SP
                 _rendererTransform.position = Vector3.one * 9999f;
                 _rendererMoved = true;
             }
-
-            Vector3 reflectedPos = ReflectPos(_playerCam.transform.position);
-            Vector3 reflectedForward = ReflectDir(_playerCam.transform.forward);
-            Vector3 reflectedUp = ReflectDir(_playerCam.transform.up);
+            /*
+            Vector3 reflectedPos = Vector3.Reflect(_playerCam.transform.position - _mirrorPlane.position, _mirrorPlane.forward) + _mirrorPlane.position;
+            Vector3 reflectedForward = Vector3.Reflect(_playerCam.transform.forward, _mirrorPlane.transform.forward);
+            Vector3 reflectedUp = Vector3.Reflect(_playerCam.transform.up, _mirrorPlane.forward);
 
             _mirrorCam.transform.SetPositionAndRotation(reflectedPos, Quaternion.LookRotation(reflectedForward, reflectedUp));
-
+            */
             GL.invertCulling = true;
             _mirrorCam.Render();
             GL.invertCulling = false;
@@ -67,19 +69,6 @@ namespace SteampunkItems.Valuables_SP
                 _rendererTransform.position = _originalRendererPos;
                 _rendererMoved = false;
             }
-        }
-
-        public Vector3 ReflectPos(Vector3 pos)
-        {
-            Vector3 normal = _mirrorPlane.forward;
-            Vector3 toPos = pos - _mirrorPlane.position;
-            return Vector3.Reflect(toPos, normal);
-        }
-
-        public Vector3 ReflectDir(Vector3 dir)
-        {
-            Vector3 normal = _mirrorPlane.forward;
-            return Vector3.Reflect(dir, normal);
         }
 
         public bool IsVisibleToCamera(Renderer rend, Camera cam)
