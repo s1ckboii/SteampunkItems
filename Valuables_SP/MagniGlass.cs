@@ -24,7 +24,7 @@ public class MagniGlass : MonoBehaviour
         Active
     }
 
-    public void Awake()
+    private void Awake()
     {
         _photonView = GetComponent<PhotonView>();
         _physGrabObject = GetComponent<PhysGrabObject>();
@@ -32,7 +32,7 @@ public class MagniGlass : MonoBehaviour
         _forceGrabPoint = transform.Find("Force Grab Point");
     }
 
-    public void Update()
+    private void Update()
     {
         switch (_currentState)
         {
@@ -92,8 +92,9 @@ public class MagniGlass : MonoBehaviour
             {
                 ForcePosition();
             }
-                PlayerAvatar.instance.OverridePupilSize(3f, 4, 1f, 1f, 5f, 0.5f);
-            CameraZoom.Instance.OverrideZoomSet(20f, 0.1f, 0.5f, 1f, gameObject, 0);
+            PhysGrabber.instance.OverrideGrabDistance(0.5f);
+            PlayerAvatar.instance.OverridePupilSize(3f, 4, 1f, 1f, 5f, 0.5f);
+            CameraZoom.Instance.OverrideZoomSet(40f, 0.1f, 0.5f, 1f, gameObject, 0);
         }
 
         if (!isGrabbing && _wasGrabbedLastFrame && _ownerActorNumber == localActor)
@@ -108,7 +109,7 @@ public class MagniGlass : MonoBehaviour
 
         _wasGrabbedLastFrame = isGrabbing;
     }
-    public void SetState(States newState)
+    private void SetState(States newState)
     {
         _currentState = newState;
         _stateStart = true;
@@ -127,7 +128,6 @@ public class MagniGlass : MonoBehaviour
             _physGrabObject.TurnXYZ(turnX, turnY, identity);
         }
         _physGrabObject.OverrideGrabVerticalPosition(-0.24f);
-        PhysGrabber.instance.OverrideGrabDistance(0.5f);
     }
     private IEnumerator ResetIndestructibleAfterDelay(float delay)
     {

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using Photon.Pun;
+using TMPro;
 
 namespace SteampunkItems.Valuables_SP;
 public class Headset : MonoBehaviour
@@ -11,9 +12,9 @@ public class Headset : MonoBehaviour
 
     private PhotonView _photonView;
     private PhysGrabObject _physGrabObject;
+    private ItemToggle _toggle;
 
     private int _currentSongIndex;
-    private ItemToggle _toggle;
     private bool _isPlaying;
     private bool _isFirstGrab = true;
 
@@ -45,7 +46,6 @@ public class Headset : MonoBehaviour
         }
 
     }
-
 
     private void ToggleAudio()
     {
