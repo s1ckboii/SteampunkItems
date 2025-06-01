@@ -1,41 +1,61 @@
-﻿using UnityEngine;
+﻿using Photon.Pun;
 using System.Collections.Generic;
-using Photon.Pun;
 using TMPro;
+using UnityEngine;
 
 namespace SteampunkItems.Valuables_SP;
 public class Headset : MonoBehaviour
 {
     public AudioSource audioSource;
-    public List<ParticleSystem> _particles = [];
-    public List<AudioClip> _songs = [];
+    public List<ParticleSystem> particles = [];
+    public List<AudioClip> songs = [];
+    public AnimationCurve curveIntro;
+    public AnimationCurve curveOutro;
+    public Gradient topLeft;
+    public Gradient topRight;
+    public Gradient bottomLeft;
+    public Gradient bottomRight;
 
-    private PhotonView _photonView;
-    private PhysGrabObject _physGrabObject;
-    private ItemToggle _toggle;
+    private PhotonView photonView;
+    private PhysGrabObject physGrabObject;
+    private ItemToggle toggle;
+    private TextMeshPro prompt;
+    private Vector3 dir;
+    private Vector3 scale;
+    private VertexGradient vg;
 
+    private readonly float speed = 0.2f;
+    private float gradientTime;
+    private float showTimer;
+    private float curveLerp;
     private int _currentSongIndex;
-    private bool _isPlaying;
-    private bool _isFirstGrab = true;
+    private bool isPlaying;
+    private bool isFirstGrab = true;
+    private string promptInteract;
 
     private void Awake()
     {
-        _toggle = GetComponent<ItemToggle>();
-        _photonView = GetComponent<PhotonView>();
-        _physGrabObject = GetComponent<PhysGrabObject>();
+        prompt = GetComponentInChildren<TextMeshPro>();
+        vg = prompt.colorGradient;
+        scale = prompt.transform.localScale;
+        promptInteract = InputManager.instance.InputDisplayReplaceTags("[interact]");
+        toggle = GetComponent<ItemToggle>();
+        photonView = GetComponent<PhotonView>();
+        physGrabObject = GetComponent<PhysGrabObject>();
     }
     private void Update()
     {
-        if (_physGrabObject.grabbed)
+        if (physGrabObject.grabbed)
         {
-            if (_physGrabObject.grabbedLocal)
+            showTimer = 0.1f;
+            if (physGrabObject.grabbedLocal)
             {
                 audioSource.volume = 0.5f;
             }
-            if (_isFirstGrab)
+            if (isFirstGrab)
             {
-                _toggle.toggleState = true;
-                _isFirstGrab = false;
+                toggle.toggleState = true;
+                isFirstGrab = false;
             }
             ToggleAudio();
         }
@@ -45,25 +65,87 @@ public class Headset : MonoBehaviour
             audioSource.volume = Mathf.Max(audioSource.volume, 0.1f);
         }
 
+        prompt.transform.forward = dir;
+        dir = PhysGrabber.instance.transform.forward;
+        
+
+        if (showTimer > 0f)
+        {
+            showTimer -= Time.deltaTime;
+            curveLerp += 10f * Time.deltaTime;
+            curveLerp = Mathf.Clamp01(curveLerp);
+            prompt.transform.localScale = scale * curveIntro.Evaluate(curveLerp);
+            return;
+        }
+        curveLerp -= 10f * Time.deltaTime;
+        curveLerp = Mathf.Clamp01(curveLerp);
+        prompt.transform.localScale = scale * curveOutro.Evaluate(curveLerp);
+    }
+
+    private void SetRandomGradientCorners()
+    {
+        if (prompt == null)
+        {
+            return;
+        }
+
+        vg.topLeft = topLeft.Evaluate((gradientTime + 0f) % 1f);
+        vg.topRight = topRight.Evaluate((gradientTime + 0.25f) % 1f);
+        vg.bottomLeft = bottomLeft.Evaluate((gradientTime + 0.5f) % 1f);
+        vg.bottomRight = bottomRight.Evaluate((gradientTime + 0.75f) % 1f);
+
+        prompt.colorGradient = vg;
+    }
+
+    private void AnimateGlowHeartbeat()
+    {
+        if (prompt == null) return;
+
+        Material mat = prompt.fontMaterial;
+
+        mat.EnableKeyword("GLOW_ON");
+
+        float minGlow = 0.02f;
+        float maxGlow = 0.2f;
+
+        float pulse = minGlow + (maxGlow - minGlow) * (0.5f + 0.5f * Mathf.Sin(Time.time * 15f));
+
+        mat.SetFloat("_GlowPower", pulse);
+
+        Color baseGlowColor = Color.green;
+        Color glowColor = baseGlowColor * pulse;
+        glowColor.a = 1f;
+        mat.SetColor("_GlowColor", glowColor);
     }
 
     private void ToggleAudio()
     {
-        if (_toggle.toggleState)
+        if (toggle.toggleState)
         {
-            int randomIndex = Random.Range(0, _songs.Count);
+            gradientTime += Time.deltaTime * speed;
+            if (gradientTime > 1f)
+            {
+                gradientTime -= 1f;
+            }
+            SetRandomGradientCorners();
+            AnimateGlowHeartbeat();
+            prompt.enableVertexGradient = true;
+            prompt.text = "Toggle music OFF [" + promptInteract + "]";
+            int randomIndex = Random.Range(0, songs.Count);
             if (SemiFunc.IsMultiplayer())
             {
-                _photonView.RPC("PlaySongRPC", RpcTarget.All, randomIndex);
+                photonView.RPC("PlaySongRPC", RpcTarget.All, randomIndex);
             }
             else
             {
                 PlaySongRPC(randomIndex);
             }
         }
-        else if (!_toggle.toggleState)
+        else if (!toggle.toggleState)
         {
-            _isPlaying = false;
+            prompt.enableVertexGradient = false;
+            prompt.text = "Toggle music ON [" + promptInteract + "]";
+            isPlaying = false;
             StopParticles();
             audioSource.Stop();
         }
@@ -72,14 +154,14 @@ public class Headset : MonoBehaviour
     {
         StopParticles();
 
-        if (songIndex < _particles.Count)
+        if (songIndex < particles.Count)
         {
-            _particles[songIndex].Play();
+            particles[songIndex].Play();
         }
     }
     private void StopParticles()
     {
-        foreach (var particle in _particles)
+        foreach (var particle in particles)
         {
             particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
@@ -88,11 +170,11 @@ public class Headset : MonoBehaviour
     [PunRPC]
     private void PlaySongRPC(int songIndex)
     {
-        if (!_isPlaying)
+        if (!isPlaying)
         {
-            _isPlaying = true;
+            isPlaying = true;
 
-            audioSource.clip = _songs[songIndex];
+            audioSource.clip = songs[songIndex];
             audioSource.Play();
 
             _currentSongIndex = songIndex;
