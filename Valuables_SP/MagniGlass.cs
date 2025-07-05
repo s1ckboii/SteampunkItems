@@ -7,15 +7,15 @@ namespace SteampunkItems.Valuables_SP;
 
 public class MagniGlass : MonoBehaviour
 {
-    private PhotonView _photonView;
-    private PhysGrabObject _physGrabObject;
-    private Transform _forceGrabPoint;
+    private PhotonView photonView;
+    private PhysGrabObject physGrabObject;
+    private Transform forceGrabPoint;
 
-    private bool _stateStart;
-    private bool _wasGrabbedLastFrame = false;
-    private int _ownerActorNumber = -1;
+    private bool stateStart;
+    private bool wasGrabbedLastFrame = false;
+    private int ownerActorNumber = -1;
 
-    private Coroutine _resetIndestructibleCoroutine;
+    private Coroutine resetIndestructibleCoroutine;
 
     public States _currentState;
     public enum States
@@ -26,10 +26,10 @@ public class MagniGlass : MonoBehaviour
 
     private void Awake()
     {
-        _photonView = GetComponent<PhotonView>();
-        _physGrabObject = GetComponent<PhysGrabObject>();
+        photonView = GetComponent<PhotonView>();
+        physGrabObject = GetComponent<PhysGrabObject>();
 
-        _forceGrabPoint = transform.Find("Force Grab Point");
+        forceGrabPoint = transform.Find("Force Grab Point");
     }
 
     private void Update()
@@ -46,47 +46,47 @@ public class MagniGlass : MonoBehaviour
     }
     private void StateIdle()
     {
-        if (_stateStart)
+        if (stateStart)
         {
-            _stateStart = false;
+            stateStart = false;
         }
 
-        if (_physGrabObject.grabbedLocal)
+        if (physGrabObject.grabbedLocal)
         {
             SetState(States.Active);
         }
     }
     private void StateActive()
     {
-        if (_stateStart)
+        if (stateStart)
         {
-            _stateStart = false;
+            stateStart = false;
         }
-        bool isGrabbing = _physGrabObject.grabbedLocal;
+        bool isGrabbing = physGrabObject.grabbedLocal;
         int localActor = PhotonNetwork.LocalPlayer.ActorNumber;
 
         if (isGrabbing)
         {
-            if (_ownerActorNumber != localActor)
+            if (ownerActorNumber != localActor)
             {
-                _ownerActorNumber = localActor;
+                ownerActorNumber = localActor;
             }
 
-            if (_resetIndestructibleCoroutine != null)
+            if (resetIndestructibleCoroutine != null)
             {
-                StopCoroutine(_resetIndestructibleCoroutine);
+                StopCoroutine(resetIndestructibleCoroutine);
             }
 
-            _physGrabObject.OverrideIndestructible(0.5f);
-            _resetIndestructibleCoroutine = StartCoroutine(ResetIndestructibleAfterDelay(0.5f));
+            physGrabObject.OverrideIndestructible(0.5f);
+            resetIndestructibleCoroutine = StartCoroutine(ResetIndestructibleAfterDelay(0.5f));
         }
 
-        if (isGrabbing && _ownerActorNumber == localActor)
+        if (isGrabbing && ownerActorNumber == localActor)
         {
-            _physGrabObject.forceGrabPoint = _forceGrabPoint;
+            physGrabObject.forceGrabPoint = forceGrabPoint;
             if (SemiFunc.IsMultiplayer())
             {
-                _photonView.RPC("ForcePosition", RpcTarget.All);
+                photonView.RPC("ForcePosition", RpcTarget.All);
             }
             else
             {
@@ -97,9 +97,9 @@ public class MagniGlass : MonoBehaviour
             CameraZoom.Instance.OverrideZoomSet(40f, 0.1f, 0.5f, 1f, gameObject, 0);
         }
 
-        if (!isGrabbing && _wasGrabbedLastFrame && _ownerActorNumber == localActor)
+        if (!isGrabbing && wasGrabbedLastFrame && ownerActorNumber == localActor)
         {
-            _ownerActorNumber = -1;
+            ownerActorNumber = -1;
         }
 
         if (!isGrabbing)
@@ -107,12 +107,12 @@ public class MagniGlass : MonoBehaviour
             SetState(States.Idle);
         }
 
-        _wasGrabbedLastFrame = isGrabbing;
+        wasGrabbedLastFrame = isGrabbing;
     }
     private void SetState(States newState)
     {
         _currentState = newState;
-        _stateStart = true;
+        stateStart = true;
     }
     [PunRPC]
     public void ForcePosition()
@@ -125,15 +125,15 @@ public class MagniGlass : MonoBehaviour
         bool flag = false;
         if (!flag)
         {
-            _physGrabObject.TurnXYZ(turnX, turnY, identity);
+            physGrabObject.TurnXYZ(turnX, turnY, identity);
         }
-        _physGrabObject.OverrideGrabVerticalPosition(-0.24f);
+        physGrabObject.OverrideGrabVerticalPosition(-0.24f);
     }
     private IEnumerator ResetIndestructibleAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        _physGrabObject.OverrideIndestructible(0f);
-        _resetIndestructibleCoroutine = null;
+        physGrabObject.OverrideIndestructible(0f);
+        resetIndestructibleCoroutine = null;
     }
 
 }

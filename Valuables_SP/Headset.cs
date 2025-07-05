@@ -50,9 +50,9 @@ public class Headset : MonoBehaviour
             showTimer = 0.1f;
             if (physGrabObject.grabbedLocal)
             {
-                audioSource.volume = 0.5f;
+                audioSource.volume = Plugins.ModConfig.ConfigGrabbedMusicVolume.Value;
             }
-            if (isFirstGrab)
+            if (isFirstGrab && Plugins.ModConfig.ConfigFirstGrab.Value)
             {
                 toggle.toggleState = true;
                 isFirstGrab = false;
@@ -62,7 +62,7 @@ public class Headset : MonoBehaviour
         else
         {
             audioSource.volume -= Time.deltaTime * 0.25f;
-            audioSource.volume = Mathf.Max(audioSource.volume, 0.1f);
+            audioSource.volume = Mathf.Max(audioSource.volume, Plugins.ModConfig.ConfigUngrabbedMusicVolume.Value);
         }
 
         prompt.transform.forward = dir;

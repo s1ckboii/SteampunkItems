@@ -1,8 +1,10 @@
-﻿using System.IO;
-using UnityEngine;
-using BepInEx;
+﻿using BepInEx;
+using BepInEx.Configuration;
 using REPOLib.Modules;
+using SteampunkItems.Configs;
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 
 namespace SteampunkItems;
 
@@ -10,8 +12,13 @@ namespace SteampunkItems;
 [BepInDependency(REPOLib.MyPluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
 public class Plugins : BaseUnityPlugin
 {
+    public static ConfigFile ConfigFile { get; private set; } = null!;
+    public static ConfigEntries ModConfig { get; private set; } = null!;
     private void Awake()
     {
+        ConfigFile = this.Config;
+        ModConfig = new ConfigEntries();
+
         string pluginFolderPath = Path.GetDirectoryName(Info.Location);
         string assetBundleFilePath = Path.Combine(pluginFolderPath, "steampunkitems");
         AssetBundle assetBundle = AssetBundle.LoadFromFile(assetBundleFilePath);
@@ -39,13 +46,15 @@ public class Plugins : BaseUnityPlugin
         }
         List<string> itemAssetNames =
         [
-            "Item Melee Pickaxe_SP",
+            //"Item Melee Pickaxe_SP",
             //"Item Bombolver_SP"
         ];
         foreach (var itemName in itemAssetNames)
         {
             RegisterItem(assetBundle, itemName);
         }
+
+        ModConfig.ConfigManager(ConfigFile);
     }
     private void RegisterValuable(AssetBundle assetBundle, string valuableName, List<string> valuableAssetNames)
     {
