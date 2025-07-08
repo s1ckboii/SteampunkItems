@@ -42,6 +42,7 @@ public class Headset : MonoBehaviour
         toggle = GetComponent<ItemToggle>();
         photonView = GetComponent<PhotonView>();
         physGrabObject = GetComponent<PhysGrabObject>();
+        prompt.enabled = Plugins.ModConfig.ConfigPromptEnable.Value;
     }
     private void Update()
     {
@@ -141,7 +142,7 @@ public class Headset : MonoBehaviour
                 PlaySongRPC(randomIndex);
             }
         }
-        else if (!toggle.toggleState)
+        else
         {
             prompt.enableVertexGradient = false;
             prompt.text = "Toggle music ON [" + promptInteract + "]";

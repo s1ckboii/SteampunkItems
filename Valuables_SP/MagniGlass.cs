@@ -1,5 +1,6 @@
 ﻿using Photon.Pun;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 
@@ -9,11 +10,21 @@ public class MagniGlass : MonoBehaviour
 {
     private PhotonView photonView;
     private PhysGrabObject physGrabObject;
-    private Transform forceGrabPoint;
+    private ItemToggle toggle;
 
+    public AnimationCurve curveIntro;
+    public AnimationCurve curveOutro;
+    private TextMeshPro prompt;
+    private Transform forceGrabPoint;
+    private Vector3 scale;
+    private Vector3 dir;
+
+    private string promptInteract;
     private bool stateStart;
     private bool wasGrabbedLastFrame = false;
     private int ownerActorNumber = -1;
+    private float showTimer;
+    private float curveLerp;
 
     private Coroutine resetIndestructibleCoroutine;
 
@@ -28,6 +39,9 @@ public class MagniGlass : MonoBehaviour
     {
         photonView = GetComponent<PhotonView>();
         physGrabObject = GetComponent<PhysGrabObject>();
+        prompt = GetComponent<TextMeshPro>();
+        promptInteract = InputManager.instance.InputDisplayReplaceTags("[interact]");
+        toggle = GetComponent<ItemToggle>();
 
         forceGrabPoint = transform.Find("Force Grab Point");
     }
@@ -43,17 +57,38 @@ public class MagniGlass : MonoBehaviour
                 StateActive();
                 break;
         }
+        prompt.transform.forward = dir;
+        dir = PhysGrabber.instance.transform.forward;
     }
     private void StateIdle()
     {
         if (stateStart)
         {
             stateStart = false;
+            showTimer = 0.1f;
+            if (physGrabObject.grabbedLocal)
+            {
+                prompt.text = "Zoom in [" + promptInteract + "]";
+                if (showTimer > 0f)
+                {
+                    showTimer -= Time.deltaTime;
+                    curveLerp += 10f * Time.deltaTime;
+                    curveLerp = Mathf.Clamp01(curveLerp);
+                    prompt.transform.localScale = scale * curveIntro.Evaluate(curveLerp);
+                    return;
+                }
+            }
+            curveLerp -= 10f * Time.deltaTime;
+            curveLerp = Mathf.Clamp01(curveLerp);
+            prompt.transform.localScale = scale * curveOutro.Evaluate(curveLerp);
         }
 
-        if (physGrabObject.grabbedLocal)
+        if (toggle.toggleState)
         {
             SetState(States.Active);
+            curveLerp -= 10f * Time.deltaTime;
+            curveLerp = Mathf.Clamp01(curveLerp);
+            prompt.transform.localScale = scale * curveOutro.Evaluate(curveLerp);
         }
     }
     private void StateActive()
@@ -92,9 +127,9 @@ public class MagniGlass : MonoBehaviour
             {
                 ForcePosition();
             }
-            PhysGrabber.instance.OverrideGrabDistance(0.5f);
-            PlayerAvatar.instance.OverridePupilSize(3f, 4, 1f, 1f, 5f, 0.5f);
-            CameraZoom.Instance.OverrideZoomSet(40f, 0.1f, 0.5f, 1f, gameObject, 0);
+            PhysGrabber.instance.OverrideGrabDistance(Plugins.ModConfig.ConfigOverrideGrabDistance.Value);
+            PlayerAvatar.instance.OverridePupilSize(Plugins.ModConfig.ConfigOverrideMagniGlassPupilSize.Value, 4, 1f, 1f, 5f, 0.5f);
+            CameraZoom.Instance.OverrideZoomSet(Plugins.ModConfig.ConfigOverrideMagniGlassZoomSet.Value, 0.1f, 0.5f, 1f, gameObject, 0);
         }
 
         if (!isGrabbing && wasGrabbedLastFrame && ownerActorNumber == localActor)
@@ -135,5 +170,4 @@ public class MagniGlass : MonoBehaviour
         physGrabObject.OverrideIndestructible(0f);
         resetIndestructibleCoroutine = null;
     }
-
 }
