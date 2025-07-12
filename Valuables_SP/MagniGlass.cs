@@ -3,7 +3,6 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-
 namespace SteampunkItems.Valuables_SP;
 
 public class MagniGlass : MonoBehaviour
@@ -57,8 +56,6 @@ public class MagniGlass : MonoBehaviour
                 StateActive();
                 break;
         }
-        prompt.transform.forward = dir;
-        dir = PhysGrabber.instance.transform.forward;
     }
     private void StateIdle()
     {
@@ -77,15 +74,17 @@ public class MagniGlass : MonoBehaviour
                     prompt.transform.localScale = scale * curveIntro.Evaluate(curveLerp);
                     return;
                 }
+                if (toggle.toggleImpulse)
+                {
+                    toggle.toggleState = false;
+                    SetState(States.Active);
+                    curveLerp -= 10f * Time.deltaTime;
+                    curveLerp = Mathf.Clamp01(curveLerp);
+                    prompt.transform.localScale = scale * curveOutro.Evaluate(curveLerp);
+                }
+                prompt.transform.forward = dir;
+                dir = PhysGrabber.instance.transform.forward;
             }
-            curveLerp -= 10f * Time.deltaTime;
-            curveLerp = Mathf.Clamp01(curveLerp);
-            prompt.transform.localScale = scale * curveOutro.Evaluate(curveLerp);
-        }
-
-        if (toggle.toggleState)
-        {
-            SetState(States.Active);
             curveLerp -= 10f * Time.deltaTime;
             curveLerp = Mathf.Clamp01(curveLerp);
             prompt.transform.localScale = scale * curveOutro.Evaluate(curveLerp);
@@ -137,7 +136,7 @@ public class MagniGlass : MonoBehaviour
             ownerActorNumber = -1;
         }
 
-        if (!isGrabbing)
+        if (toggle.toggleState || !isGrabbing)
         {
             SetState(States.Idle);
         }

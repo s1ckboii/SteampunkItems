@@ -13,12 +13,12 @@ public class ConfigEntries
     #endregion
 
     #region Stopwatch
-    public ConfigEntry<string> ConfigStopwatchMaterial { get; private set; }
+    public ConfigEntry<string> ConfigStopwatchONMaterial { get; private set; }
+    public ConfigEntry<string> ConfigStopwatchOFFMaterial { get; private set; }
     public ConfigEntry<float> ConfigOwnVoicePitchMultiplier { get; private set; }
     public ConfigEntry<float> ConfigOthersVoicePitchMultiplier { get; private set; }
     public ConfigEntry<float> ConfigOverridePlayerSpeed { get; private set; }
     public ConfigEntry<float> ConfigOverridePlayerLookSpeed { get; private set; }
-    public ConfigEntry<float> ConfigOverridePlayerAnimationSpeed { get; private set; }
     public ConfigEntry<float> ConfigOverrideStopwatchZoomSet {  get; private set; }
     public ConfigEntry<float> ConfigSaturationOverride { get; private set; }
     public ConfigEntry<float> ConfigOverrideStopwatchPupilSize { get; private set; }
@@ -56,10 +56,14 @@ public class ConfigEntries
         #endregion
 
         #region Stopwatch
-        ConfigStopwatchMaterial = configFile.Bind("Stopwatch Options",
-            "Material | Color",
-            "#FFFFFF",
-            "Allows you to change the material's color in HEX format (Default: #FFFFF)"); // Don't forget to update this with default colorű
+        ConfigStopwatchONMaterial = configFile.Bind("Stopwatch Options",
+            "Material | Color ON",
+            "#420069",
+            "Allows you to change the material's color in HEX format while not grabbing the valuable (Default: #FFFFFF)");
+        ConfigStopwatchOFFMaterial = configFile.Bind("Stopwatch Options",
+            "Material | Color OFF",
+            "#690420",
+            "Allows you to change the material's color in HEX format while grabbing the valuable (Default: #FFFFF)");
         ConfigOwnVoicePitchMultiplier = configFile.Bind("Stopwatch Options",
             "Sounds | Own Voice Pitch Multiplier",
             0.65f,
@@ -78,23 +82,18 @@ public class ConfigEntries
         ConfigOverridePlayerSpeed = configFile.Bind("Stopwatch Options",
             "Overrides | Speed",
             0.5f,
-            new ConfigDescription("Allows you to adjust override speed for the player while grabbing the valuable (default: 0.5).",
-            new AcceptableValueRange<float>(0.1f, 2f)));
+            new ConfigDescription("Allows you to adjust override speed (LOOKSPEED SCALES WITH THIS) for the player while grabbing the valuable (default: 0.5).",
+            new AcceptableValueRange<float>(0.35f, 2f)));
         ConfigOverridePlayerLookSpeed = configFile.Bind("Stopwatch Options",
             "Overrides | Look Speed",
             0.5f,
-            new ConfigDescription("Allows you to adjust override look speed for the player while grabbing the valuable (default: 0.5).",
+            new ConfigDescription("Allows you to adjust override look speed (Playerspeed + LookSpeedConfig = overall lookspeed) override for the player while grabbing the valuable (default: 0.5).",
             new AcceptableValueRange<float>(0.1f, 2f)));
-        ConfigOverridePlayerAnimationSpeed = configFile.Bind("Stopwatch Options",
-            "Overrides | Animation Speed",
-            0.2f,
-            new ConfigDescription("Allows you to adjust override animation speed for the player while grabbing the valuable (default: 0.2).",
-            new AcceptableValueRange<float>(0.1f, 1f)));
         ConfigOverrideStopwatchZoomSet = configFile.Bind("Stopwatch Options",
             "Overrides | Zoom",
             50f,
-            new ConfigDescription("Allows you to adjust override zoom for the player while grabbing the valuable (default: 50).",
-            new AcceptableValueRange<float>(0.1f, 100f)));
+            new ConfigDescription("Allows you to adjust override zoom for the player while grabbing the valuable [NOTE: 30 is closer, 100 is farther] (default: 50).",
+            new AcceptableValueRange<float>(30f, 100f)));
         ConfigSaturationOverride = configFile.Bind("Stopwatch Options",
             "Overrides | Saturation",
             50f,
@@ -109,7 +108,7 @@ public class ConfigEntries
             "Overrides | Drag",
             20f,
             new ConfigDescription("Allow you to adjust override drag value for the player while grabbing the valuable (default: 20).",
-            new AcceptableValueRange<float>(0.1f, 100f)));
+            new AcceptableValueRange<float>(0.1f, 50f)));
         ConfigOverrideAngularDrag = configFile.Bind("Stopwatch Options",
             "Overrides | Angular Drag",
             40f,
