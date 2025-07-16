@@ -1,4 +1,5 @@
-﻿using Photon.Pun;
+﻿/*
+using Photon.Pun;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -74,9 +75,8 @@ public class MagniGlass : MonoBehaviour
                     prompt.transform.localScale = scale * curveIntro.Evaluate(curveLerp);
                     return;
                 }
-                if (toggle.toggleImpulse)
+                if (toggle.toggleState)
                 {
-                    toggle.toggleState = false;
                     SetState(States.Active);
                     curveLerp -= 10f * Time.deltaTime;
                     curveLerp = Mathf.Clamp01(curveLerp);
@@ -169,4 +169,4 @@ public class MagniGlass : MonoBehaviour
         physGrabObject.OverrideIndestructible(0f);
         resetIndestructibleCoroutine = null;
     }
-}
+}*/

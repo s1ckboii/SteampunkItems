@@ -24,14 +24,14 @@ public class ConfigEntries
     public ConfigEntry<float> ConfigOverrideStopwatchPupilSize { get; private set; }
     public ConfigEntry<float> ConfigOverrideDrag { get; private set; }
     public ConfigEntry<float> ConfigOverrideAngularDrag { get; private set; }
-    public ConfigEntry<float> ConfigItemPitchMultiplier { get; private set; }
     #endregion
-
+/*
     #region MagniGlass
     public ConfigEntry<float> ConfigOverrideGrabDistance { get; private set; }
     public ConfigEntry<float> ConfigOverrideMagniGlassPupilSize { get; private set; }
     public ConfigEntry<float> ConfigOverrideMagniGlassZoomSet { get; private set; }
     #endregion
+*/
     public void ConfigManager(ConfigFile configFile)
     {
         #region Headset
@@ -68,17 +68,12 @@ public class ConfigEntries
             "Sounds | Own Voice Pitch Multiplier",
             0.65f,
             new ConfigDescription("Allows you to adjust the pitch multiplier for your own voice while grabbing the valuable (default: 0.65).",
-            new AcceptableValueRange<float>(0.1f, 5f)));
+            new AcceptableValueRange<float>(0.55f, 1.15f)));
         ConfigOthersVoicePitchMultiplier = configFile.Bind("Stopwatch Options",
             "Sounds | Other Grabbers Pitch Multiplier",
             0.65f,
             new ConfigDescription("Allows you to adjust the pitch multiplier for other players' voices while grabbing the valuable (default: 0.65).",
-            new AcceptableValueRange<float>(0.1f, 5f)));
-        ConfigItemPitchMultiplier = configFile.Bind("Stopwatch Options",
-            "Sounds | Item Sound",
-            2f,
-            new ConfigDescription("Allows you to adjust the pitch multiplier for the item while grabbing the valuable (default: 2).",
-            new AcceptableValueRange<float>(0.1f, 5f)));
+            new AcceptableValueRange<float>(0.55f, 1.15f)));
         ConfigOverridePlayerSpeed = configFile.Bind("Stopwatch Options",
             "Overrides | Speed",
             0.5f,
@@ -108,14 +103,14 @@ public class ConfigEntries
             "Overrides | Drag",
             20f,
             new ConfigDescription("Allow you to adjust override drag value for the player while grabbing the valuable (default: 20).",
-            new AcceptableValueRange<float>(0.1f, 50f)));
+            new AcceptableValueRange<float>(0.1f, 25f)));
         ConfigOverrideAngularDrag = configFile.Bind("Stopwatch Options",
             "Overrides | Angular Drag",
             40f,
             new ConfigDescription("Allow you to adjust override angular drag value for the player while grabbing the valuable (default: 40).",
-            new AcceptableValueRange<float>(0.1f, 200f)));
+            new AcceptableValueRange<float>(0.1f, 45f)));
         #endregion
-
+/*
         #region MagniGlass
         ConfigOverrideGrabDistance = configFile.Bind("MagniGlass Options",
             "Overrides | Grab Distance",
@@ -133,5 +128,6 @@ public class ConfigEntries
             new ConfigDescription("Allows you to adjust override zoom for the player while grabbing the valuable (default: 40).",
             new AcceptableValueRange<float>(0.1f, 100f)));
         #endregion
+*/
     }
 }

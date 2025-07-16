@@ -54,7 +54,7 @@ public class Stopwatch : MonoBehaviour
 
     private void Update()
     {
-        float pitchMultiplier = Mathf.Lerp(Plugins.ModConfig.ConfigItemPitchMultiplier.Value, 0.5f, soundPitchLerp);
+        float pitchMultiplier = Mathf.Lerp(2f, 0.5f, soundPitchLerp);
         soundLoop.PlayLoop(currentState == States.Active, 0.8f, 0.8f, pitchMultiplier);
         switch (currentState)
         {

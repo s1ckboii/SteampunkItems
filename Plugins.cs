@@ -31,7 +31,7 @@ public class Plugins : BaseUnityPlugin
 
         List<string> valuabaleAssetNames = 
         [
-            "Valuable MagniGlass_SP",
+            //"Valuable MagniGlass_SP",
             "Valuable Telescope_SP",
             "Valuable Stopwatch_SP",
             "Valuable HeadSet_SP",
@@ -46,7 +46,7 @@ public class Plugins : BaseUnityPlugin
         }
         List<string> itemAssetNames =
         [
-            //"Item Melee Pickaxe_SP",
+            "Item Melee Pickaxe_SP",
             //"Item Bombolver_SP"
         ];
         foreach (var itemName in itemAssetNames)
