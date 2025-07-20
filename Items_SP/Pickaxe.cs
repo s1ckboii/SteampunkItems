@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Photon.Pun;
 
+namespace SteampunkItems.Items_SP;
 public class Pickaxe : MonoBehaviour
 {
     public Animator animator;

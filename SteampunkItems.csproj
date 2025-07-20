@@ -7,7 +7,7 @@
     
     <AssemblyName>$(MSBuildProjectName)</AssemblyName> <!-- PLUGIN_GUID -->
     <Product>$(MSBuildProjectName)</Product>           <!-- PLUGIN_NAME -->
-    <Version>1.1.5</Version>                           <!-- PLUGIN_VERSION -->
+    <Version>1.1.6</Version>                           <!-- PLUGIN_VERSION -->
     <Authors>s1ckboy</Authors>
     <Description></Description>
     <Copyright>Copyright © 2025 s1ckboy</Copyright>

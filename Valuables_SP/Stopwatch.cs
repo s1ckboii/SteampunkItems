@@ -25,6 +25,14 @@ public class Stopwatch : MonoBehaviour
     private Vector2 hourNeedleSpeedRange = new(10f, 40f);
     private Vector2 secNeedleSpeedRange = new(60f, 180f);
 
+    #region ConfigNumbers
+    private float PlayerSpeed;
+    private float LookSpeed;
+    private float ZoomSet;
+    private float Saturation;
+
+    #endregion
+
     public Light light;
 
     public Sound soundLoop;
@@ -122,6 +130,10 @@ public class Stopwatch : MonoBehaviour
         {
             physGrabObject.OverrideDrag(Plugins.ModConfig.ConfigOverrideDrag.Value);
             physGrabObject.OverrideAngularDrag(Plugins.ModConfig.ConfigOverrideAngularDrag.Value);
+            PlayerSpeed = Plugins.ModConfig.ConfigOverridePlayerSpeed.Value;
+            LookSpeed = Plugins.ModConfig.ConfigOverridePlayerLookSpeed.Value;
+            ZoomSet = Plugins.ModConfig.ConfigOverrideStopwatchZoomSet.Value;
+            Saturation = Plugins.ModConfig.ConfigSaturationOverride.Value;
             if (!physGrabObject.grabbed)
             {
                 SetState(States.Idle);
@@ -132,12 +144,12 @@ public class Stopwatch : MonoBehaviour
             PlayerAvatar.instance.voiceChat.OverridePitch(Plugins.ModConfig.ConfigOwnVoicePitchMultiplier.Value, 1f, 2f);
             PlayerAvatar.instance.OverridePupilSize(Plugins.ModConfig.ConfigOverrideStopwatchPupilSize.Value, 4, 1f, 1f, 5f, 0.5f);
             PlayerController.instance.OverrideSpeed(Plugins.ModConfig.ConfigOverridePlayerSpeed.Value);
-            PlayerController.instance.OverrideLookSpeed(Plugins.ModConfig.ConfigOverridePlayerSpeed.Value + Plugins.ModConfig.ConfigOverridePlayerLookSpeed.Value, 2f, 1f);
+            PlayerController.instance.OverrideLookSpeed(PlayerSpeed + LookSpeed, 2f, 1f);
             PlayerController.instance.OverrideAnimationSpeed(0.2f, 1f, 2f);
             PlayerController.instance.OverrideTimeScale(0.1f);
             physGrabObject.OverrideTorqueStrength(0.6f);
-            CameraZoom.Instance.OverrideZoomSet(Plugins.ModConfig.ConfigOverrideStopwatchZoomSet.Value, 0.1f, 0.5f, 1f, base.gameObject, 0);
-            PostProcessing.Instance.SaturationOverride(Plugins.ModConfig.ConfigSaturationOverride.Value, 0.1f, 0.5f, 0.1f, base.gameObject);
+            CameraZoom.Instance.OverrideZoomSet(ZoomSet, 0.1f, 0.5f, 1f, base.gameObject, 0);
+            PostProcessing.Instance.SaturationOverride(Saturation, 0.1f, 0.5f, 0.1f, base.gameObject);
             RotateNeedleTowards(minNeedle, ref minTargetRot, minNeedleSpeed);
             RotateNeedleTowards(hourNeedle, ref hourTargetRot, hourNeedleSpeed);
             RotateNeedleTowards(secNeedle, ref secTargetRot, secNeedleSpeed);
