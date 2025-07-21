@@ -1,6 +1,5 @@
 ﻿using BepInEx.Configuration;
 
-
 namespace SteampunkItems.Configs;
 
 public class ConfigEntries
@@ -10,6 +9,7 @@ public class ConfigEntries
     public ConfigEntry<bool> ConfigFirstGrab { get; private set; }
     public ConfigEntry<float> ConfigGrabbedMusicVolume { get; private set; }
     public ConfigEntry<float> ConfigUngrabbedMusicVolume { get; private set; }
+    public ConfigEntry<string> ConfigBlacklistedSongs { get; private set; }
     #endregion
 
     #region Stopwatch
@@ -53,6 +53,10 @@ public class ConfigEntries
             0.1f,
             new ConfigDescription("Allows you to change the volume when its playing on the floor (default: 0.1).",
             new AcceptableValueRange<float>(0, 1f)));
+        ConfigBlacklistedSongs = configFile.Bind("Headset Options",
+            "Music | Blacklisted Song-Particle pair",
+            "",
+            "Allows you to remove song-particle pairs. There are 8 pairs (0-7), if you want to remove first, third, and fourth you would need to type '0, 2, 3'.");
         #endregion
 
         #region Stopwatch

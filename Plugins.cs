@@ -37,7 +37,6 @@ public class Plugins : BaseUnityPlugin
             "Valuable HeadSet_SP",
             "Valuable Chronometer_SP",
             "Valuable Logpose_SP"
-            //"Valuable Mirror_SP"
         ];
         List<string> genericList = ["Valuables - Generic"];
         foreach (var valuableName in valuabaleAssetNames)

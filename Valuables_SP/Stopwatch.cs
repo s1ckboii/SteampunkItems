@@ -134,6 +134,7 @@ public class Stopwatch : MonoBehaviour
             LookSpeed = Plugins.ModConfig.ConfigOverridePlayerLookSpeed.Value;
             ZoomSet = Plugins.ModConfig.ConfigOverrideStopwatchZoomSet.Value;
             Saturation = Plugins.ModConfig.ConfigSaturationOverride.Value;
+            photonView.RPC("SyncConfigValuesRPC", RpcTarget.Others, PlayerSpeed, ZoomSet, LookSpeed, Saturation);
             if (!physGrabObject.grabbed)
             {
                 SetState(States.Idle);
@@ -143,7 +144,7 @@ public class Stopwatch : MonoBehaviour
         {
             PlayerAvatar.instance.voiceChat.OverridePitch(Plugins.ModConfig.ConfigOwnVoicePitchMultiplier.Value, 1f, 2f);
             PlayerAvatar.instance.OverridePupilSize(Plugins.ModConfig.ConfigOverrideStopwatchPupilSize.Value, 4, 1f, 1f, 5f, 0.5f);
-            PlayerController.instance.OverrideSpeed(Plugins.ModConfig.ConfigOverridePlayerSpeed.Value);
+            PlayerController.instance.OverrideSpeed(PlayerSpeed);
             PlayerController.instance.OverrideLookSpeed(PlayerSpeed + LookSpeed, 2f, 1f);
             PlayerController.instance.OverrideAnimationSpeed(0.2f, 1f, 2f);
             PlayerController.instance.OverrideTimeScale(0.1f);
@@ -194,7 +195,7 @@ public class Stopwatch : MonoBehaviour
         if (Quaternion.Angle(needle.localRotation, target) < 1f)
         {
             target = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
-            speed = Random.Range(30f, 90f); // regenerate speed here if you want new speed per target
+            speed = Random.Range(30f, 90f);
         }
     }
     private void SetState(States state)
@@ -216,5 +217,13 @@ public class Stopwatch : MonoBehaviour
     {
         currentState = state;
         stateStart = true;
+    }
+    [PunRPC]
+    private void SyncConfigValuesRPC(float playerSpeed, float zoomSet, float lookSpeed, float saturation)
+    {
+        PlayerSpeed = playerSpeed;
+        ZoomSet = zoomSet;
+        LookSpeed = lookSpeed;
+        Saturation = saturation;
     }
 }
