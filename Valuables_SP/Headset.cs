@@ -16,6 +16,15 @@ public class Headset : MonoBehaviour
     public Gradient bottomLeft;
     public Gradient bottomRight;
 
+    [Header("Head Bob Settings")]
+    public float bobRadiusInner = 5f;
+    public float bobRadiusOuter = 10f;
+    public float bobAmount = 15f;
+    public float camAmountMax = 0.02f;
+    public float camAmountGrab = 0.01f;
+    public int sampleSize = 256;
+    public float smoothSpeed = 5f;
+
     private PhotonView photonView;
     private PhysGrabObject physGrabObject;
     private ItemToggle toggle;
@@ -28,15 +37,27 @@ public class Headset : MonoBehaviour
     private float gradientTime;
     private float showTimer;
     private float curveLerp;
+    private float currentTilt;
+    private float currentCamTilt;
+    private float[] audioSamples;
     private int _currentSongIndex;
     private bool isPlaying;
     private bool isFirstGrab = true;
     private string promptInteract;
     private string lastBlacklistString = null;
 
-    private List<int> blacklistedSongs = [];
+    private readonly List<int> blacklistedSongs = [];
     private List<AudioClip> ogSongs = [];
     private List<ParticleSystem> ogParts = [];
+    private List<PlayerAvatar> allPlayers = [];
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, bobRadiusOuter);
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, bobRadiusInner);
+    }
 
     private void Awake()
     {
@@ -49,8 +70,8 @@ public class Headset : MonoBehaviour
         physGrabObject = GetComponent<PhysGrabObject>();
         prompt.enabled = Plugins.ModConfig.ConfigPromptEnable.Value;
 
-        ogSongs = new List<AudioClip>(songs);
-        ogParts = new List<ParticleSystem>(particles);
+        ogSongs = [.. songs];
+        ogParts = [.. particles];
 
         if (SemiFunc.IsMasterClientOrSingleplayer())
         {
@@ -58,6 +79,13 @@ public class Headset : MonoBehaviour
             photonView.RPC("SyncBlacklistRPC", RpcTarget.Others, Plugins.ModConfig.ConfigBlacklistedSongs.Value);
         }
     }
+
+    private void Start()
+    {
+        allPlayers.AddRange(GameDirector.instance.PlayerList);
+        audioSamples = new float[sampleSize];
+    }
+
     private void Update()
     {
         if (physGrabObject.grabbed)
@@ -79,6 +107,11 @@ public class Headset : MonoBehaviour
 
             audioSource.volume -= Time.deltaTime * 0.25f;
             audioSource.volume = Mathf.Max(audioSource.volume, Plugins.ModConfig.ConfigUngrabbedMusicVolume.Value);
+        }
+
+        if (audioSource.isPlaying && audioSource.clip != null)
+        {
+            ApplyHeadBobToNearbyPlayers();
         }
 
         prompt.transform.forward = dir;
@@ -106,6 +139,56 @@ public class Headset : MonoBehaviour
         }
         PromptGone();
     }
+    private void ApplyHeadBobToNearbyPlayers()
+    {
+        audioSource.GetOutputData(audioSamples, 0);
+        float sum = 0f;
+        for (int i = 0; i < audioSamples.Length; i++)
+            sum += Mathf.Abs(audioSamples[i]);
+        float rms = sum / audioSamples.Length;
+
+        float wave = Mathf.Sin(Time.time * 2f * Mathf.PI * 2f);
+
+        foreach (PlayerAvatar player in allPlayers)
+        {
+            if (player == null) continue;
+
+            float distance = Vector3.Distance(player.transform.position, transform.position);
+            float tiltAmount = bobAmount;
+
+            float camAmount;
+            if (physGrabObject.grabbedLocal)
+            {
+                camAmount = camAmountGrab;
+            }
+            else if (distance <= bobRadiusOuter)
+            {
+                float t = Mathf.InverseLerp(bobRadiusOuter, bobRadiusInner, distance);
+                camAmount = Mathf.Lerp(0f, camAmountMax, t);
+                tiltAmount = bobAmount * t;
+            }
+            else
+            {
+                continue;
+            }
+
+            float targetTilt = wave * rms * tiltAmount * 100f;
+            float targetCamTilt = wave * rms * camAmount * 100f;
+
+            currentTilt = Mathf.Lerp(currentTilt, targetTilt, Time.deltaTime * smoothSpeed);
+            currentCamTilt = Mathf.Lerp(currentCamTilt, targetCamTilt, Time.deltaTime * smoothSpeed);
+
+            if (player.isLocal)
+            {
+                CameraAim.Instance.AdditiveAimY(currentCamTilt);
+                player.playerAvatarVisuals.HeadTiltOverride(currentTilt);
+            }
+            else
+            {
+                player.playerAvatarVisuals.HeadTiltOverride(currentTilt);
+            }
+        }
+    }
 
     private void PromptGone()
     {
@@ -127,26 +210,6 @@ public class Headset : MonoBehaviour
         vg.bottomRight = bottomRight.Evaluate((gradientTime + 0.75f) % 1f);
 
         prompt.colorGradient = vg;
-    }
-
-    private void AnimateGlowHeartbeat(Color baseGlowColor) // doesnt work lol, will fix later idk whatsup
-    {
-        if (prompt == null) return;
-
-        Material mat = prompt.fontMaterial;
-
-        mat.EnableKeyword("GLOW_ON");
-
-        float minGlow = 0.02f;
-        float maxGlow = 0.2f;
-
-        float pulse = minGlow + (maxGlow - minGlow) * (0.5f + 0.5f * Mathf.Sin(Time.time * 15f));
-
-        mat.SetFloat("_GlowPower", pulse);
-
-        Color glowColor = baseGlowColor * pulse;
-        glowColor.a = 1f;
-        mat.SetColor("_GlowColor", glowColor);
     }
 
     private void ToggleAudio()
@@ -207,9 +270,8 @@ public class Headset : MonoBehaviour
 
     private void ApplyBlacklist(string blacklistString)
     {
-        // Reset to original lists before applying blacklist
-        songs = new List<AudioClip>(ogSongs);
-        particles = new List<ParticleSystem>(ogParts);
+        songs = [.. ogSongs];
+        particles = [.. ogParts];
 
         if (string.IsNullOrWhiteSpace(blacklistString))
         {
@@ -218,7 +280,7 @@ public class Headset : MonoBehaviour
 
         string[] split = blacklistString.Split(',');
 
-        HashSet<int> blacklist = new HashSet<int>();
+        HashSet<int> blacklist = [];
 
         foreach (string s in split)
         {
@@ -246,8 +308,8 @@ public class Headset : MonoBehaviour
             }
         }
 
-        List<AudioClip> newSongs = new List<AudioClip>();
-        List<ParticleSystem> newParticles = new List<ParticleSystem>();
+        List<AudioClip> newSongs = [];
+        List<ParticleSystem> newParticles = [];
 
         for (int i = 0; i < ogSongs.Count; i++)
         {

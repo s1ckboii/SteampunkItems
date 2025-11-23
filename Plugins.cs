@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using REPOLib.Modules;
+using REPOLib.Objects.Sdk;
 using SteampunkItems.Configs;
 using System.Collections.Generic;
 using System.IO;
@@ -39,16 +40,16 @@ public class Plugins : BaseUnityPlugin
             "Valuable Logpose_SP"
         ];
         List<string> genericList = ["Valuables - Generic"];
-        foreach (var valuableName in valuabaleAssetNames)
+        foreach (string valuableName in valuabaleAssetNames)
         {
             RegisterValuable(assetBundle, valuableName, genericList);
         }
         List<string> itemAssetNames =
         [
-            "Item Melee Pickaxe_SP",
+            "pickaxee",
             //"Item Bombolver_SP"
         ];
-        foreach (var itemName in itemAssetNames)
+        foreach (string itemName in itemAssetNames)
         {
             RegisterItem(assetBundle, itemName);
         }
@@ -62,7 +63,7 @@ public class Plugins : BaseUnityPlugin
     }
     private void RegisterItem(AssetBundle assetBundle, string itemName)
     {
-        Item items = assetBundle.LoadAsset<Item>(itemName);
+        ItemContent items = assetBundle.LoadAsset<ItemContent>(itemName);
         Items.RegisterItem(items);
     }
 }
