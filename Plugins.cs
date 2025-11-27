@@ -44,6 +44,8 @@ public class Plugins : BaseUnityPlugin
         {
             RegisterValuable(assetBundle, valuableName, genericList);
         }
+
+        // We are not using the Prefab name here anymore but the ItemContent name..
         List<string> itemAssetNames =
         [
             "pickaxee",

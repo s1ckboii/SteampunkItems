@@ -6,40 +6,40 @@ public class Pickaxe : MonoBehaviour
 {
     public Animator animator;
 
-    private PhysGrabObject physGrabObject;
-    private PhotonView photonView;
+    private PhysGrabObject _physGrabObject;
+    private PhotonView _photonView;
 
-    private bool isGrabbed = false;
-    private bool wasGrabbedOnPreviousUpdate;
+    private bool _isGrabbed = false;
+    private bool _wasGrabbedOnPreviousUpdate;
 
     private void Awake()
     {
-        physGrabObject = GetComponent<PhysGrabObject>();
-        photonView = GetComponent<PhotonView>();
+        _physGrabObject = GetComponent<PhysGrabObject>();
+        _photonView = GetComponent<PhotonView>();
     }
 
     private void Update()
     {
-        if (physGrabObject != null)
+        if (_physGrabObject != null)
         {
-            isGrabbed = physGrabObject.grabbed;
+            _isGrabbed = _physGrabObject.grabbed;
         }
         if (SemiFunc.IsMultiplayer())
         {
-            if (isGrabbed != wasGrabbedOnPreviousUpdate)
+            if (_isGrabbed != _wasGrabbedOnPreviousUpdate)
             {
-                photonView.RPC("SetAnimationState", RpcTarget.All, isGrabbed);
+                _photonView.RPC("SetAnimationState", RpcTarget.All, _isGrabbed);
             }
         }
         else
         {
-            if (isGrabbed != wasGrabbedOnPreviousUpdate)
+            if (_isGrabbed != _wasGrabbedOnPreviousUpdate)
             {
-                SetAnimationState(isGrabbed);
+                SetAnimationState(_isGrabbed);
             }
         }
 
-            wasGrabbedOnPreviousUpdate = isGrabbed;
+            _wasGrabbedOnPreviousUpdate = _isGrabbed;
     }
 
     [PunRPC]

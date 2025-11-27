@@ -25,31 +25,31 @@ public class Headset : MonoBehaviour
     public int sampleSize = 256;
     public float smoothSpeed = 5f;
 
-    private PhotonView photonView;
-    private PhysGrabObject physGrabObject;
-    private ItemToggle toggle;
-    private TextMeshPro prompt;
-    private Vector3 dir;
-    private Vector3 scale;
-    private VertexGradient vg;
+    private PhotonView _photonView;
+    private PhysGrabObject _physGrabObject;
+    private ItemToggle _toggle;
+    private TextMeshPro _prompt;
+    private Vector3 _direction;
+    private Vector3 _scale;
+    private VertexGradient _vertexGradient;
 
-    private readonly float speed = 0.2f;
-    private float gradientTime;
-    private float showTimer;
-    private float curveLerp;
-    private float currentTilt;
-    private float currentCamTilt;
-    private float[] audioSamples;
+    private readonly float _speed = 0.2f;
+    private float _gradientTime;
+    private float _showTimer;
+    private float _curveLerp;
+    private float _currentTilt;
+    private float _currentCamTilt;
+    private float[] _audioSamples;
     private int _currentSongIndex;
-    private bool isPlaying;
-    private bool isFirstGrab = true;
-    private string promptInteract;
-    private string lastBlacklistString = null;
+    private bool _isPlaying;
+    private bool _isFirstGrab = true;
+    private string _promptInteract;
+    private string _lastBlacklistString = null;
 
-    private readonly List<int> blacklistedSongs = [];
-    private List<AudioClip> ogSongs = [];
-    private List<ParticleSystem> ogParts = [];
-    private List<PlayerAvatar> allPlayers = [];
+    private readonly List<int> _blacklistedSongs = [];
+    private List<AudioClip> _ogSongs = [];
+    private List<ParticleSystem> _ogParts = [];
+    private List<PlayerAvatar> _allPlayers = [];
 
     private void OnDrawGizmosSelected()
     {
@@ -61,44 +61,44 @@ public class Headset : MonoBehaviour
 
     private void Awake()
     {
-        prompt = GetComponentInChildren<TextMeshPro>();
-        vg = prompt.colorGradient;
-        scale = prompt.transform.localScale;
-        promptInteract = InputManager.instance.InputDisplayReplaceTags("[interact]");
-        toggle = GetComponent<ItemToggle>();
-        photonView = GetComponent<PhotonView>();
-        physGrabObject = GetComponent<PhysGrabObject>();
-        prompt.enabled = Plugins.ModConfig.ConfigPromptEnable.Value;
+        _prompt = GetComponentInChildren<TextMeshPro>();
+        _vertexGradient = _prompt.colorGradient;
+        _scale = _prompt.transform.localScale;
+        _promptInteract = InputManager.instance.InputDisplayReplaceTags("[interact]");
+        _toggle = GetComponent<ItemToggle>();
+        _photonView = GetComponent<PhotonView>();
+        _physGrabObject = GetComponent<PhysGrabObject>();
+        _prompt.enabled = Plugins.ModConfig.ConfigPromptEnable.Value;
 
-        ogSongs = [.. songs];
-        ogParts = [.. particles];
+        _ogSongs = [.. songs];
+        _ogParts = [.. particles];
 
         if (SemiFunc.IsMasterClientOrSingleplayer())
         {
             ApplyBlacklist(Plugins.ModConfig.ConfigBlacklistedSongs.Value);
-            photonView.RPC("SyncBlacklistRPC", RpcTarget.Others, Plugins.ModConfig.ConfigBlacklistedSongs.Value);
+            _photonView.RPC("SyncBlacklistRPC", RpcTarget.Others, Plugins.ModConfig.ConfigBlacklistedSongs.Value);
         }
     }
 
     private void Start()
     {
-        allPlayers.AddRange(GameDirector.instance.PlayerList);
-        audioSamples = new float[sampleSize];
+        _allPlayers.AddRange(GameDirector.instance.PlayerList);
+        _audioSamples = new float[sampleSize];
     }
 
     private void Update()
     {
-        if (physGrabObject.grabbed)
+        if (_physGrabObject.grabbed)
         {
-            showTimer = 0.1f;
-            if (physGrabObject.grabbedLocal)
+            _showTimer = 0.1f;
+            if (_physGrabObject.grabbedLocal)
             {
                 audioSource.volume = Plugins.ModConfig.ConfigGrabbedMusicVolume.Value;
             }
-            if (isFirstGrab && Plugins.ModConfig.ConfigFirstGrab.Value)
+            if (_isFirstGrab && Plugins.ModConfig.ConfigFirstGrab.Value)
             {
-                toggle.toggleState = true;
-                isFirstGrab = false;
+                _toggle.toggleState = true;
+                _isFirstGrab = false;
             }
             ToggleAudio();
         }
@@ -114,42 +114,42 @@ public class Headset : MonoBehaviour
             ApplyHeadBobToNearbyPlayers();
         }
 
-        prompt.transform.forward = dir;
-        dir = PhysGrabber.instance.transform.forward;
+        _prompt.transform.forward = _direction;
+        _direction = PhysGrabber.instance.transform.forward;
 
 
         string currentBlacklist = Plugins.ModConfig.ConfigBlacklistedSongs.Value;
 
         if (SemiFunc.IsMasterClientOrSingleplayer())
         {
-            if (currentBlacklist != lastBlacklistString)
+            if (currentBlacklist != _lastBlacklistString)
             {
-                lastBlacklistString = currentBlacklist;
+                _lastBlacklistString = currentBlacklist;
                 UpdateBlacklist(currentBlacklist);
             }
         }
 
-        if (showTimer > 0f)
+        if (_showTimer > 0f)
         {
-            showTimer -= Time.deltaTime;
-            curveLerp += 10f * Time.deltaTime;
-            curveLerp = Mathf.Clamp01(curveLerp);
-            prompt.transform.localScale = scale * curveIntro.Evaluate(curveLerp);
+            _showTimer -= Time.deltaTime;
+            _curveLerp += 10f * Time.deltaTime;
+            _curveLerp = Mathf.Clamp01(_curveLerp);
+            _prompt.transform.localScale = _scale * curveIntro.Evaluate(_curveLerp);
             return;
         }
         PromptGone();
     }
     private void ApplyHeadBobToNearbyPlayers()
     {
-        audioSource.GetOutputData(audioSamples, 0);
+        audioSource.GetOutputData(_audioSamples, 0);
         float sum = 0f;
-        for (int i = 0; i < audioSamples.Length; i++)
-            sum += Mathf.Abs(audioSamples[i]);
-        float rms = sum / audioSamples.Length;
+        for (int i = 0; i < _audioSamples.Length; i++)
+            sum += Mathf.Abs(_audioSamples[i]);
+        float rms = sum / _audioSamples.Length;
 
         float wave = Mathf.Sin(Time.time * 2f * Mathf.PI * 2f);
 
-        foreach (PlayerAvatar player in allPlayers)
+        foreach (PlayerAvatar player in _allPlayers)
         {
             if (player == null) continue;
 
@@ -157,7 +157,7 @@ public class Headset : MonoBehaviour
             float tiltAmount = bobAmount;
 
             float camAmount;
-            if (physGrabObject.grabbedLocal)
+            if (_physGrabObject.grabbedLocal)
             {
                 camAmount = camAmountGrab;
             }
@@ -175,61 +175,61 @@ public class Headset : MonoBehaviour
             float targetTilt = wave * rms * tiltAmount * 100f;
             float targetCamTilt = wave * rms * camAmount * 100f;
 
-            currentTilt = Mathf.Lerp(currentTilt, targetTilt, Time.deltaTime * smoothSpeed);
-            currentCamTilt = Mathf.Lerp(currentCamTilt, targetCamTilt, Time.deltaTime * smoothSpeed);
+            _currentTilt = Mathf.Lerp(_currentTilt, targetTilt, Time.deltaTime * smoothSpeed);
+            _currentCamTilt = Mathf.Lerp(_currentCamTilt, targetCamTilt, Time.deltaTime * smoothSpeed);
 
             if (player.isLocal)
             {
-                CameraAim.Instance.AdditiveAimY(currentCamTilt);
-                player.playerAvatarVisuals.HeadTiltOverride(currentTilt);
+                CameraAim.Instance.AdditiveAimY(_currentCamTilt);
+                player.playerAvatarVisuals.HeadTiltOverride(_currentTilt);
             }
             else
             {
-                player.playerAvatarVisuals.HeadTiltOverride(currentTilt);
+                player.playerAvatarVisuals.HeadTiltOverride(_currentTilt);
             }
         }
     }
 
     private void PromptGone()
     {
-        curveLerp -= 10f * Time.deltaTime;
-        curveLerp = Mathf.Clamp01(curveLerp);
-        prompt.transform.localScale = scale * curveOutro.Evaluate(curveLerp);
+        _curveLerp -= 10f * Time.deltaTime;
+        _curveLerp = Mathf.Clamp01(_curveLerp);
+        _prompt.transform.localScale = _scale * curveOutro.Evaluate(_curveLerp);
     }
 
     private void SetRandomGradientCorners()
     {
-        if (prompt == null)
+        if (_prompt == null)
         {
             return;
         }
 
-        vg.topLeft = topLeft.Evaluate((gradientTime + 0f) % 1f);
-        vg.topRight = topRight.Evaluate((gradientTime + 0.25f) % 1f);
-        vg.bottomLeft = bottomLeft.Evaluate((gradientTime + 0.5f) % 1f);
-        vg.bottomRight = bottomRight.Evaluate((gradientTime + 0.75f) % 1f);
+        _vertexGradient.topLeft = topLeft.Evaluate((_gradientTime + 0f) % 1f);
+        _vertexGradient.topRight = topRight.Evaluate((_gradientTime + 0.25f) % 1f);
+        _vertexGradient.bottomLeft = bottomLeft.Evaluate((_gradientTime + 0.5f) % 1f);
+        _vertexGradient.bottomRight = bottomRight.Evaluate((_gradientTime + 0.75f) % 1f);
 
-        prompt.colorGradient = vg;
+        _prompt.colorGradient = _vertexGradient;
     }
 
     private void ToggleAudio()
     {
-        if (toggle.toggleState && songs.Count > 0)
+        if (_toggle.toggleState && songs.Count > 0)
         {
-            prompt.color = Color.white;
-            gradientTime += Time.deltaTime * speed;
-            if (gradientTime > 1f)
+            _prompt.color = Color.white;
+            _gradientTime += Time.deltaTime * _speed;
+            if (_gradientTime > 1f)
             {
-                gradientTime -= 1f;
+                _gradientTime -= 1f;
             }
             SetRandomGradientCorners();
-            prompt.enableVertexGradient = true;
-            prompt.text = "Toggle music OFF [" + promptInteract + "]";
+            _prompt.enableVertexGradient = true;
+            _prompt.text = "Toggle music OFF [" + _promptInteract + "]";
 
             int randomIndex = Random.Range(0, songs.Count);
             if (SemiFunc.IsMultiplayer())
             {
-                photonView.RPC("PlaySongRPC", RpcTarget.All, randomIndex);
+                _photonView.RPC("PlaySongRPC", RpcTarget.All, randomIndex);
             }
             else
             {
@@ -238,15 +238,15 @@ public class Headset : MonoBehaviour
         }
         else if (songs.Count == 0)
         {
-            prompt.text = "NO MORE SONGS TO PLAY";
-            prompt.color = Color.red;
+            _prompt.text = "NO MORE SONGS TO PLAY";
+            _prompt.color = Color.red;
         }
         else
         {
-            prompt.color = Color.white;
-            prompt.enableVertexGradient = false;
-            prompt.text = "Toggle music ON [" + promptInteract + "]";
-            isPlaying = false;
+            _prompt.color = Color.white;
+            _prompt.enableVertexGradient = false;
+            _prompt.text = "Toggle music ON [" + _promptInteract + "]";
+            _isPlaying = false;
             StopParticles();
             audioSource.Stop();
         }
@@ -270,8 +270,8 @@ public class Headset : MonoBehaviour
 
     private void ApplyBlacklist(string blacklistString)
     {
-        songs = [.. ogSongs];
-        particles = [.. ogParts];
+        songs = [.. _ogSongs];
+        particles = [.. _ogParts];
 
         if (string.IsNullOrWhiteSpace(blacklistString))
         {
@@ -293,32 +293,32 @@ public class Headset : MonoBehaviour
 
             if (int.TryParse(trimmed, out int index))
             {
-                if (index >= 0 && index < ogSongs.Count)
+                if (index >= 0 && index < _ogSongs.Count)
                 {
                     blacklist.Add(index);
                 }
                 else
                 {
-                    Debug.LogWarning($"Blacklist index {index} out of range. Valid range is 0 to {ogSongs.Count - 1}.");
+                    Debug.LogWarning($"Blacklist index {index} out of range. Valid range is 0 to {_ogSongs.Count - 1}.");
                 }
             }
             else
             {
-                Debug.LogWarning($"Blacklist entry '{trimmed}' is not valid, please use integers from 0 to {ogSongs.Count - 1} (you baakaa)");
+                Debug.LogWarning($"Blacklist entry '{trimmed}' is not valid, please use integers from 0 to {_ogSongs.Count - 1} (you baakaa)");
             }
         }
 
         List<AudioClip> newSongs = [];
         List<ParticleSystem> newParticles = [];
 
-        for (int i = 0; i < ogSongs.Count; i++)
+        for (int i = 0; i < _ogSongs.Count; i++)
         {
             if (!blacklist.Contains(i))
             {
-                newSongs.Add(ogSongs[i]);
-                if (i < ogParts.Count)
+                newSongs.Add(_ogSongs[i]);
+                if (i < _ogParts.Count)
                 {
-                    newParticles.Add(ogParts[i]);
+                    newParticles.Add(_ogParts[i]);
                 }
             }
         }
@@ -336,7 +336,7 @@ public class Headset : MonoBehaviour
         if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
 
         ApplyBlacklist(blacklistString);
-        photonView.RPC("SyncBlacklistRPC", RpcTarget.Others, blacklistString);
+        _photonView.RPC("SyncBlacklistRPC", RpcTarget.Others, blacklistString);
     }
 
 
@@ -361,9 +361,9 @@ public class Headset : MonoBehaviour
             return;
         }
 
-        if (!isPlaying)
+        if (!_isPlaying)
         {
-            isPlaying = true;
+            _isPlaying = true;
 
             audioSource.clip = songs[songIndex];
             audioSource.Play();
